@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
+import { StorageService } from '../storage.service';
 
 @Component({
   selector: 'app-tags',
@@ -9,5 +10,5 @@ import { RouterOutlet, RouterLink } from '@angular/router';
 })
 
 export class TagsComponent {
-
+  constructor(private storageService:StorageService) {}
 }
