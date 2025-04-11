@@ -1,2 +1,6 @@
-export interface Note {
+export class Note {
+    id: number;
+    title: string;
+    tags: Tag[];
+    content: string;
 }
