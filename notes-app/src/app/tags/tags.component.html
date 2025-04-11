@@ -1,1 +1,21 @@
-<p>tags works!</p>
+<div class="tagManagement">
+<div class="tagList">
+    @for(tag of tags; track $index) {
+        <div class="tagEntry" (dblclick)="updateEditedTag(tag)">
+            <div class="tagElement"><app-tag [id]="tag.id" [label]="tag.label" [color]="tag.color"></app-tag></div>
+            <button class="tagDeleteButton" (click)="deleteTag(tag)">x</button>
+        </div>
+    } @empty {
+        <div class="emptyTagDiv">Aucun tag</div>
+    }
+</div>
+@if(editing) {
+    <form>
+        <input type="text" [(ngModel)]="editing.label" name="editing.label"/>
+        <input type="color" [(ngModel)]="editing.color" name="editing.color"/>
+        <button type="submit" (click)="handleEditCancelEvent()">ANNULER</button>
+        <button type="submit" (click)="handleEditConfirmEvent()">VALIDER</button>
+    </form>
+}
+<button class="tagAddButton" (click)="dialogAddTag()">+</button>
+</div>

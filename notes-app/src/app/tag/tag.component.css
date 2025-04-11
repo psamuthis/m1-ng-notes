@@ -1,0 +1,18 @@
+.tagComponent {
+    display: flex;
+    flex-direction: column;
+    border: solid black 2px;
+    border-radius: 9999px 9999px 9999px 9999px;
+    padding: 9px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.tagComponent:hover {
+    cursor: pointer;
+    border-width: 3px;
+}
+
+.tagLabel:hover {
+    cursor: inherit;
+}

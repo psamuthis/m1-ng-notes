@@ -1,0 +1,70 @@
+* {
+    font-family: Hack;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.tagManagement {
+    display: flex;
+    flex-direction: row;
+    border-radius: 8px;
+    padding: 5px;
+    margin-top: 12px;
+    align-items: center;
+}
+
+.tagList {
+    display: flex;
+    flex-direction: row;
+    overflow-x: scroll;
+    width: 100%;
+}
+
+.tagEntry {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: fit-content;
+    align-items: center;
+    justify-content: center;
+}
+.tagEntry:hover .tagDeleteButton{
+    visibility: visible;
+}
+
+.tagElement {
+    width: fit-content;
+}
+
+.tagDeleteButton {
+    visibility: hidden;
+    width: 7%;
+    height: 100%;
+    background: transparent;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border: none;
+}
+
+.tagDeleteButton:hover {
+    cursor: pointer;
+}
+
+.tagAddButton {
+    justify-self: flex-end;
+    border-radius: 50%;
+    padding: 0;
+    padding-right: 5px;
+    padding-left: 5px;
+    margin-right: 8px;
+    height: fit-content;
+    font-size: 18px;
+    background: green;
+    color: white;
+    border: solid black 2px;
+}
+.tagAddButton:hover {
+    padding-right: 10px;
+    padding-left: 10px;
+    border-radius: 9999px 9999px 9999px 9999px;
+}
