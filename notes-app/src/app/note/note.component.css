@@ -1,0 +1,39 @@
+* {
+    font-family: Hack;
+}
+.noteList {
+    margin-top: 12px;
+    border-radius: 8px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: scroll;
+    height: 74vh;
+    background: rgba(33, 33, 33, 1);
+    border: solid rgba(40, 40, 40, 1);
+    margin-bottom: 8px;
+}
+
+.noteEntry {
+    background: rgba(66, 66, 66, 1);
+    color: white;
+    border: solid rgba(72, 72, 72, 1);
+    padding: 8px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+}
+
+.noteEntry:hover {
+    background: rgba(50, 50, 50, 1);
+}
+
+.noteTitle {
+    margin-top: 0;
+    margin-bottom: 0;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.noteContent {
+
+}

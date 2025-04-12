@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { StorageService } from '../storage.service';
 import { Tag } from '../tag';
 import { TagComponent } from "../tag/tag.component";
 import { FormsModule } from '@angular/forms';
+
+export const TAG_DEF_STR = 'tags';
 
 @Component({
   selector: 'app-tags',
@@ -13,6 +15,8 @@ import { FormsModule } from '@angular/forms';
 })
 
 export class TagsComponent implements OnInit {
+  @Input()id: string = TAG_DEF_STR;
+  @Input()onDelete: (tag: Tag) => void = StorageService.removeTagFromStorage;
   loaded: boolean = false;
   tags: Tag[] = [];
   editing?: Tag;
@@ -24,18 +28,43 @@ export class TagsComponent implements OnInit {
     this.loadTags();
   }
 
+  saveTags() {
+    localStorage.setItem(this.id, JSON.stringify(this.tags));
+  }
+
   loadTags() {
     if(!this.loaded) {
-      this.tags = StorageService.loadTags();
+      this.tags = [];
+      const storageTags: string | null = localStorage.getItem(this.id);
+
+      if(!storageTags) {
+      console.log("loading tags");
+        return;
+      }
+
+      const parsedTags = JSON.parse(storageTags);
+      if(Array.isArray(parsedTags)) {
+        const tags: Tag[] = [];
+        parsedTags.forEach((tag: Tag) => {
+          tags.push(tag);
+        });
+
+        tags.forEach((tag: Tag) => {
+          const actualTag: Tag | null = StorageService.getTagById(tag.id);
+          actualTag? this.tags.push(StorageService.getTagById(tag.id)!) : null;
+        })
+      }
       this.loaded = true;
     }
   }
 
   dialogAddTag(): boolean {
     const input: string | null = window.prompt("Saisir le nom du tag");
-    if(input === null || input === '') {
+    if(input === null || input === '' || this.tags.find(t => t.label === input)) {
       return false;
     }
+
+
 
     const newTag: Tag = {
       id: crypto.randomUUID(),
@@ -44,13 +73,18 @@ export class TagsComponent implements OnInit {
     }
 
     this.tags.push(newTag);
-    StorageService.saveTags(this.tags);
+    this.saveTags();
+    StorageService.saveTagToStorage(newTag);
     return false;
   }
 
   deleteTag(tag: Tag): void {
     this.tags = this.tags.filter(t => t.id !== tag.id);
-    StorageService.saveTags(this.tags);
+    if(this.id !== TAG_DEF_STR) {
+      this.onDelete(tag)
+    }
+    StorageService.removeTagFromStorage(tag);
+    this.saveTags();
   }
 
   handleEditEvent(): void {
@@ -74,14 +108,14 @@ export class TagsComponent implements OnInit {
         this.tags.push(this.editing);
       }
 
+      StorageService.saveTagToStorage(this.editing);
       this.editing = undefined;
-      StorageService.saveTags(this.tags);
     }
   }
 
   handleEditCancelEvent(): void {
     this.editing = undefined;
-    this.tags = StorageService.loadTags();
+    this.loadTags();
   }
 
   updateEditedTag(tag: Tag): void {

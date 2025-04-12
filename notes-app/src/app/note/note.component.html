@@ -1,3 +1,25 @@
 <div class="noteList">
-    @for()
+    @for(note of notes; track $index) {
+        <div class="noteEntry">
+            <h4 class="noteTitle">{{note.title}}</h4>
+            <app-tags [id]="`${note.id}`" [onDelete]="this.handleTagDelete" class="noteTagList"></app-tags>
+            <div class="noteContent">{{note.content}}</div>
+        </div>
+    }
 </div>
+@if(editing) {
+    <form class="newNoteForm">
+        <label>
+            Titre
+            <input type="text" [(ngModel)]="editing.title" name="editing.content" />
+        </label>
+
+        <label>
+            Contenu
+            <input type="text" [(ngModel)]="editing.content" name="editing.content" />
+        </label>
+
+        <button type="submit" (click)="handleNewNoteEvent()">VALIDER</button>
+    </form>
+}
+<button (click)="handleNewNoteClick()">+</button>
