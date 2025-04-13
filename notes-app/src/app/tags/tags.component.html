@@ -2,7 +2,7 @@
 <div class="tagList">
     @for(tag of tags; track $index) {
         <div class="tagEntry" (dblclick)="updateEditedTag(tag)">
-            <div class="tagElement"><app-tag [id]="`${this.id}`" [label]="tag.label" [color]="tag.color"></app-tag></div>
+            <div class="tagElement"><app-tag [label]="tag.label" [color]="tag.color"></app-tag></div>
             <button class="tagDeleteButton" (click)="deleteTag(tag)">x</button>
         </div>
     } @empty {

@@ -2,7 +2,7 @@
     @for(note of notes; track $index) {
         <div class="noteEntry">
             <h4 class="noteTitle">{{note.title}}</h4>
-            <app-tags [id]="`${note.id}`" [onDelete]="this.handleTagDelete" class="noteTagList"></app-tags>
+            <app-tags [id]="`${note.id}`" class="noteTagList"></app-tags>
             <div class="noteContent">{{note.content}}</div>
         </div>
     }

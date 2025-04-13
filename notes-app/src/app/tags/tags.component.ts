@@ -5,7 +5,7 @@ import { Tag } from '../tag';
 import { TagComponent } from "../tag/tag.component";
 import { FormsModule } from '@angular/forms';
 
-export const TAG_DEF_STR = 'tags';
+export const TAG_DEF_STR: string = 'tags';
 
 @Component({
   selector: 'app-tags',
@@ -16,7 +16,7 @@ export const TAG_DEF_STR = 'tags';
 
 export class TagsComponent implements OnInit {
   @Input()id: string = TAG_DEF_STR;
-  @Input()onDelete: (tag: Tag) => void = StorageService.removeTagFromStorage;
+  @Input()onDelete: (tag: Tag) => void = StorageService.deleteTagFromStorage;
   loaded: boolean = false;
   tags: Tag[] = [];
   editing?: Tag;
@@ -25,37 +25,64 @@ export class TagsComponent implements OnInit {
   constructor() {}
 
   ngOnInit(): void {
-    this.loadTags();
+    this.tags = this.loadTags(this.id);
+    console.log(this.id);
   }
 
   saveTags() {
     localStorage.setItem(this.id, JSON.stringify(this.tags));
+
+    if(this.id !== TAG_DEF_STR) {
+      const globalTags: Tag[] = this.loadTags(TAG_DEF_STR);
+
+      this.tags.forEach((tag: Tag) => {
+        const existingTagIndex: number = globalTags.findIndex(t => t.id === tag.id);
+
+        if(existingTagIndex !== -1) {
+          globalTags[existingTagIndex] = tag;
+        } else {
+          globalTags.push(tag);
+        }
+      });
+      localStorage.setItem(TAG_DEF_STR, JSON.stringify(globalTags));
+    }
   }
 
-  loadTags() {
-    if(!this.loaded) {
-      this.tags = [];
-      const storageTags: string | null = localStorage.getItem(this.id);
-
-      if(!storageTags) {
-      console.log("loading tags");
-        return;
-      }
-
-      const parsedTags = JSON.parse(storageTags);
-      if(Array.isArray(parsedTags)) {
-        const tags: Tag[] = [];
-        parsedTags.forEach((tag: Tag) => {
-          tags.push(tag);
-        });
-
-        tags.forEach((tag: Tag) => {
-          const actualTag: Tag | null = StorageService.getTagById(tag.id);
-          actualTag? this.tags.push(StorageService.getTagById(tag.id)!) : null;
-        })
-      }
-      this.loaded = true;
+  loadTags(key: string): Tag[] {
+    if(this.loaded) {
+      return [];
     }
+
+    if(this.id === TAG_DEF_STR) {
+      const globalTags: string | null = localStorage.getItem(TAG_DEF_STR);
+      if(!globalTags) {
+        return [];
+      }
+
+      const parsedTags = JSON.parse(globalTags);
+      const tags: Tag[] = [];
+      if(parsedTags) {
+        parsedTags.forEach((tag: Tag) => tags.push(tag));
+      }
+      return tags;
+    }
+
+    const storageTags: string | null = localStorage.getItem(key);
+
+    if(!storageTags) {
+      return [];
+    }
+
+    const parsedTags = JSON.parse(storageTags);
+    if(Array.isArray(parsedTags)) {
+      const tags: Tag[] = [];
+      parsedTags.forEach((tag: Tag) => tags.push(tag));
+      return tags;
+    }
+
+    this.loaded = true;
+
+    return [];
   }
 
   dialogAddTag(): boolean {
@@ -64,27 +91,22 @@ export class TagsComponent implements OnInit {
       return false;
     }
 
-
-
     const newTag: Tag = {
       id: crypto.randomUUID(),
       label: input,
-      color: '#00FF00',
-    }
+      color: '#BB3344',
+    };
 
     this.tags.push(newTag);
     this.saveTags();
-    StorageService.saveTagToStorage(newTag);
     return false;
   }
 
   deleteTag(tag: Tag): void {
     this.tags = this.tags.filter(t => t.id !== tag.id);
-    if(this.id !== TAG_DEF_STR) {
-      this.onDelete(tag)
-    }
-    StorageService.removeTagFromStorage(tag);
     this.saveTags();
+
+    //mettre à jour toutes les notes si depuis menu tag
   }
 
   handleEditEvent(): void {
@@ -93,6 +115,8 @@ export class TagsComponent implements OnInit {
       label: "label",
       color: "#8800CC",
     }
+
+    //mettre à jour autres notes si depuis menu notes
   }
 
   handleEditConfirmEvent(): void {
@@ -108,14 +132,13 @@ export class TagsComponent implements OnInit {
         this.tags.push(this.editing);
       }
 
-      StorageService.saveTagToStorage(this.editing);
       this.editing = undefined;
     }
   }
 
   handleEditCancelEvent(): void {
     this.editing = undefined;
-    this.loadTags();
+    this.loadTags(this.id);
   }
 
   updateEditedTag(tag: Tag): void {

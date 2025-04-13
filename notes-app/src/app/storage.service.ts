@@ -6,49 +6,26 @@ import { Tag } from './tag';
   providedIn: 'root'
 })
 export class StorageService {
-  static tags: Tag[] = [];
-  static notes: Note[] = [];
   constructor() { }
 
-  static loadNoteFromStorage(noteId: string): Note | null {
-    const storageNote: string | null = localStorage.getItem(noteId);
+  static loadNoteFromStorage(note: Note): Note | null {
+    const storageNote: string | null = localStorage.getItem(note.title);
 
     if(storageNote === null) { return null; }
-    try {
-      const parsedNote = JSON.parse(storageNote);
 
-      if(parsedNote) {
-        return parsedNote as Note;
-      }
-    } catch(error) {
-      console.error("StorageService:loadNoteFromStorage()", error);
+    const parsedNote = JSON.parse(storageNote);
+    if(parsedNote) {
+      return parsedNote as Note;
     }
 
     return null;
   }
 
-  static getNoteById(noteId: string): Note | null {
-    const memoryNote: Note | undefined = this.notes.find((note: Note): boolean => note.id === noteId);
-    if(memoryNote) {
-      return memoryNote;
-    }
-
-    const storageNote: Note | null = this.loadNoteFromStorage(noteId);
-    if(storageNote) {
-      this.notes.push(storageNote);
-      return storageNote;
-    }
-
-    return null;
+  static saveNoteToStorage(note: Note): void {
+    localStorage.setItem(note.title, JSON.stringify(note));
   }
 
-  static saveNote(note: Note): void {
-    localStorage.setItem(note.id, JSON.stringify(note));
-    console.log("overhere", note);
-    note.tags.forEach(tag => {
-      this.saveTagToStorage(tag);
-    });
-  }
+
 
   static loadTagFromStorage(key: string): Tag | null {
     const storageTag: string | null = localStorage.getItem(key);
@@ -68,37 +45,12 @@ export class StorageService {
     return null;
   }
 
-  static getTagById(tagId: string): Tag | null {
-    const memoryTag: Tag | undefined = this.tags.find((tag: Tag): boolean => tag.id === tagId);
-
-    if(memoryTag) {
-      return memoryTag;
-    } else {
-      const storageTag: Tag | null = this.loadTagFromStorage(tagId);
-
-      if(storageTag) {
-        this.tags.push(storageTag);
-        return storageTag;
-      }
-    }
-
-    return null;
-  }
-
   static saveTagToStorage(tag: Tag): void {
     localStorage.setItem(tag.id, JSON.stringify(tag));
-
-    const existingTagIndex: number = this.tags.findIndex((t: Tag) => {t.id === tag.id});
-    if(existingTagIndex !== -1) {
-      this.tags[existingTagIndex] = tag;
-    } else {
-      this.tags.push(tag);
-    }
   }
 
-  static removeTagFromStorage(tag: Tag): void {
+  static deleteTagFromStorage(tag: Tag): void {
     localStorage.removeItem(tag.id);
-    this.tags.filter((t: Tag) => { t.id === tag.id; })
   }
 
   //static loadTagsById(tagIds: string[]): Tag[] {
