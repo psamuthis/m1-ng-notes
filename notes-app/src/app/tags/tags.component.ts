@@ -69,6 +69,8 @@ export class TagsComponent {
       return false;
     }
 
+    console.log(StorageService.tags);
+    console.log(input);
     let newTag: Tag | undefined = StorageService.tags.find(t => t.label === input);
 
     if(newTag !== undefined) {
@@ -79,9 +81,9 @@ export class TagsComponent {
         label: input,
         color: '#BBFFCC',
       }
+      this.tags.push(newTag);
     }
 
-    this.tags.push(newTag);
     this.saveTags();
     console.log("new tag added", this.tags);
     return true;
