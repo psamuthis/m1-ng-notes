@@ -1,124 +1,122 @@
-import { Injectable } from '@angular/core';
+import { Injectable, OnInit } from '@angular/core';
 import { Note } from './note';
 import { Tag } from './tag';
+
+export const NOTES_STORAGE_KEY: string = 'notes';
+export const TAGS_STORAGE_KEY: string = 'tags';
 
 @Injectable({
   providedIn: 'root'
 })
-export class StorageService {
-  constructor() { }
+export class StorageService implements OnInit {
+  static tags: Tag[] = [];
+  static notes: Note[] = [];
+  constructor() {}
 
-  static loadNoteFromStorage(note: Note): Note | null {
-    const storageNote: string | null = localStorage.getItem(note.title);
-
-    if(storageNote === null) { return null; }
-
-    const parsedNote = JSON.parse(storageNote);
-    if(parsedNote) {
-      return parsedNote as Note;
+  ngOnInit() {
+    const storedNotes: string | null = localStorage.getItem(NOTES_STORAGE_KEY);
+    if(storedNotes) {
+      const notes: Note[] = JSON.parse(storedNotes);
+      notes.forEach((n: Note) => StorageService.notes.push(n));
     }
 
-    return null;
+    const storedTags: string | null = localStorage.getItem(TAGS_STORAGE_KEY);
+    if(storedTags) {
+      const tags: Tag[] = JSON.parse(storedTags);
+      tags.forEach((t: Tag) => StorageService.tags.push(t));
+    }
   }
 
-  static saveNoteToStorage(note: Note): void {
+  ngOnDestroy() {
+    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(StorageService.notes));
+    StorageService.notes.forEach((n: Note) => StorageService.saveNote(n));
+
+    localStorage.setItem(TAGS_STORAGE_KEY, JSON.stringify(StorageService.tags));
+    StorageService.tags.forEach((t: Tag) => StorageService.saveTag(t));
+  }
+
+  static saveNote(note: Note): void {
     localStorage.setItem(note.title, JSON.stringify(note));
-  }
+    console.log("StorageService | saved note to storage", note);
 
-
-
-  static loadTagFromStorage(key: string): Tag | null {
-    const storageTag: string | null = localStorage.getItem(key);
-    if(storageTag === null) {
-      return null;
+    const existingNoteIndex: number = this.notes.findIndex((n: Note) => n.id === note.id);
+    if(existingNoteIndex !== -1) {
+      console.log("StorageService | updated memory note");
+      this.notes[existingNoteIndex] = note;
+    } else {
+      console.log("StorageService | added new note to memory");
+      this.notes.push(note);
     }
 
-    const parsedTag = JSON.parse(storageTag);
-    if(parsedTag &&
-       typeof parsedTag.id === 'string' &&
-       typeof parsedTag.label === 'string' &&
-       typeof parsedTag.color === 'string'
-    ) {
-      return parsedTag as Tag;
+    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(this.notes));
+  }
+
+  static loadNote(noteTitle: string): Note | null {
+    const memoryNote: Note | undefined = this.notes.find((n: Note) => n.title === noteTitle);
+    if(memoryNote !== undefined) {
+      console.log("StorageService | Note loaded from memory: ", memoryNote);
+      return memoryNote;
+    }
+
+    const storageNote: string | null = localStorage.getItem(noteTitle);
+    if(storageNote !== null) {
+      const note: Note = JSON.parse(storageNote);
+      console.log("StorageService | Note loaded from storage: ", note);
+      return note;
     }
 
     return null;
   }
 
-  static saveTagToStorage(tag: Tag): void {
+
+
+  static saveTag(tag: Tag): void {
     localStorage.setItem(tag.id, JSON.stringify(tag));
+    console.log("saving tag", tag);
+
+    const existingTagIndex: number = this.tags.findIndex((t: Tag) => t.id === tag.id);
+    if(existingTagIndex !== -1) {
+      console.log("StorageService | updated memory tag", tag);
+      this.tags[existingTagIndex] = tag;
+    } else {
+      console.log("StorageService | added new tag to memory", tag);
+      this.tags.push(tag);
+    }
+
+    localStorage.setItem(TAGS_STORAGE_KEY, JSON.stringify(this.tags));
+    console.log(this.tags);
   }
 
-  static deleteTagFromStorage(tag: Tag): void {
-    localStorage.removeItem(tag.id);
+  static loadTag(tagId: string): Tag | null {
+    const memoryTag: Tag | undefined = this.tags.find((t: Tag) => t.id === tagId);
+    if(memoryTag !== undefined) {
+      console.log("StorageService | loaded tag from memory", memoryTag);
+      return memoryTag;
+    }
+
+    const storageTag: string | null = localStorage.getItem(tagId);
+    if(storageTag !== null) {
+      console.log("StorageService | loaded tag from storage", JSON.parse(storageTag));
+      return JSON.parse(storageTag);
+    }
+
+    console.log("StorageService | tag doesn't exist in storage tagId=", tagId);
+    console.log(this.tags);
+    return null;
   }
 
-  //static loadTagsById(tagIds: string[]): Tag[] {
-    //const tags: Tag[] = [];
-    //tagIds.forEach(tagId => {
-      //const tag: Tag | null = this.getTagById(tagId);
-      //if(tag) {
-        //tags.push(tag);
-      //}
-    //})
-    //return tags;
-  //}
+  static deleteTag(tagId: string): void {
+    localStorage.removeItem(tagId);
+    this.tags = this.tags.filter((t: Tag) => t.id !== tagId);
+    this.notes.forEach((n: Note) => n.tags = n.tags.filter((t: Tag) => t.id !== tagId));
+    localStorage.setItem(TAGS_STORAGE_KEY, JSON.stringify(this.tags));
+    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(this.notes));
+  }
 
-  //static loadTagsArray(key: string): Tag[] {
-    //const tags: string | null = localStorage.getItem(key);
-
-    //if(tags === null) {
-      //return [];
-    //}
-
-    //try {
-      //const parsedTags = JSON.parse(tags);
-
-      //if(Array.isArray(parsedTags)) {
-        //return parsedTags.filter((tag): tag is Tag => 
-          //typeof tag.id === 'string' &&
-          //typeof tag.label === 'string' &&
-          //typeof tag.color === 'string'
-        //);
-      //}
-
-      //return [];
-    //} catch(error) {
-        //console.error("loadTags()", error);
-        //return [];
-    //}
-
-  //}
-
-  //static saveTag(tag: Tag): void {
-    //localStorage.setItem(tag.id, JSON.stringify(tag));
-  //}
-  //static saveTags(tags: Tag[]): void {
-    //tags.forEach((tag: Tag) => this.saveTag(tag));
-  //}
-
-  ////static saveTags(key: string, tags: Tag[]) {
-    ////localStorage.setItem(key, JSON.stringify(tags));
-  ////}
-
-  ////static saveTag(tag: Tag): void {
-    ////const tags: Tag[] = this.loadTags(DEF_STRG_KEY);
-    ////const exists: number = tags.findIndex(t => t.label === tag.label);
-
-    ////if(exists === -1) {
-      ////tags.push(tag);
-    ////} else {
-      ////tags[exists] = tag;
-    ////}
-
-    ////this.saveTags(DEF_STRG_KEY, tags);
-  ////}
-
-  //static handleTagEditFromNote(note: Note): void {
-    ////update le 'tags' storage et toutes les autres notes ayant le tag correspondant
-  //}
-
-  //static handleTagEditFromManagement(tag: Tag): void {
-    ////update toutes les notes
-  //}
+  static updateTag(tag: Tag): void {
+    this.tags[this.tags.findIndex(t => t.id === tag.id)] = tag || this.tags.push(tag);
+    this.notes.forEach(n => n.tags[n.tags.findIndex(t => t.id === tag.id)] = tag);
+    localStorage.setItem(TAGS_STORAGE_KEY, JSON.stringify(this.tags));
+    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(this.notes));
+  }
 }

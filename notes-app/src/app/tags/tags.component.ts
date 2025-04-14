@@ -1,11 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
-import { StorageService } from '../storage.service';
 import { Tag } from '../tag';
 import { TagComponent } from "../tag/tag.component";
 import { FormsModule } from '@angular/forms';
-
-export const TAG_DEF_STR: string = 'tags';
+import { Note } from '../note';
+import { StorageService, TAGS_STORAGE_KEY } from '../storage.service';
 
 @Component({
   selector: 'app-tags',
@@ -14,9 +13,9 @@ export const TAG_DEF_STR: string = 'tags';
   styleUrl: './tags.component.css'
 })
 
-export class TagsComponent implements OnInit {
-  @Input()id: string = TAG_DEF_STR;
-  @Input()onDelete: (tag: Tag) => void = StorageService.deleteTagFromStorage;
+export class TagsComponent {
+  @Input()storageKey: string = TAGS_STORAGE_KEY;
+  @Input()refresh: () => void = this.loadTags;
   loaded: boolean = false;
   tags: Tag[] = [];
   editing?: Tag;
@@ -25,120 +24,108 @@ export class TagsComponent implements OnInit {
   constructor() {}
 
   ngOnInit(): void {
-    this.tags = this.loadTags(this.id);
-    console.log(this.id);
+    this.loadTags();
   }
 
-  saveTags() {
-    localStorage.setItem(this.id, JSON.stringify(this.tags));
-
-    if(this.id !== TAG_DEF_STR) {
-      const globalTags: Tag[] = this.loadTags(TAG_DEF_STR);
-
-      this.tags.forEach((tag: Tag) => {
-        const existingTagIndex: number = globalTags.findIndex(t => t.id === tag.id);
-
-        if(existingTagIndex !== -1) {
-          globalTags[existingTagIndex] = tag;
-        } else {
-          globalTags.push(tag);
-        }
-      });
-      localStorage.setItem(TAG_DEF_STR, JSON.stringify(globalTags));
-    }
+  saveTags(): void {
+    localStorage.setItem(this.storageKey, JSON.stringify(this.tags));
+    this.tags.forEach((tag: Tag) => StorageService.saveTag(tag));
   }
 
-  loadTags(key: string): Tag[] {
-    if(this.loaded) {
-      return [];
+  loadTags(): void {
+    this.tags = [];
+    const storedTags: string | null = localStorage.getItem(this.storageKey);
+    if(storedTags === null) {
+      return;
     }
 
-    if(this.id === TAG_DEF_STR) {
-      const globalTags: string | null = localStorage.getItem(TAG_DEF_STR);
-      if(!globalTags) {
-        return [];
+    const tags: Tag[] = JSON.parse(storedTags);
+    tags.forEach((t: Tag) => {
+      const tag: Tag | null = StorageService.loadTag(t.id);
+      if(tag) {
+        this.tags.push(tag);
       }
-
-      const parsedTags = JSON.parse(globalTags);
-      const tags: Tag[] = [];
-      if(parsedTags) {
-        parsedTags.forEach((tag: Tag) => tags.push(tag));
-      }
-      return tags;
-    }
-
-    const storageTags: string | null = localStorage.getItem(key);
-
-    if(!storageTags) {
-      return [];
-    }
-
-    const parsedTags = JSON.parse(storageTags);
-    if(Array.isArray(parsedTags)) {
-      const tags: Tag[] = [];
-      parsedTags.forEach((tag: Tag) => tags.push(tag));
-      return tags;
-    }
-
-    this.loaded = true;
-
-    return [];
-  }
-
-  dialogAddTag(): boolean {
-    const input: string | null = window.prompt("Saisir le nom du tag");
-    if(input === null || input === '' || this.tags.find(t => t.label === input)) {
-      return false;
-    }
-
-    const newTag: Tag = {
-      id: crypto.randomUUID(),
-      label: input,
-      color: '#BB3344',
-    };
-
-    this.tags.push(newTag);
-    this.saveTags();
-    return false;
+    });
   }
 
   deleteTag(tag: Tag): void {
-    this.tags = this.tags.filter(t => t.id !== tag.id);
-    this.saveTags();
+    if(this.storageKey === TAGS_STORAGE_KEY) {
+      StorageService.deleteTag(tag.id);
+    }
+    //rafraichir les autres instances de TagsComponent
+    this.refresh();
 
-    //mettre à jour toutes les notes si depuis menu tag
+    this.tags = this.tags.filter((t: Tag) => t.id !== tag.id);
+    console.log("deleted tag", tag);
+    console.log("tags after deletion", this.tags);
+    localStorage.setItem(this.storageKey, JSON.stringify(this.tags));
+    this.tags.forEach((t: Tag) => StorageService.saveTag(t));
   }
 
-  handleEditEvent(): void {
-    this.editing = {
-      id: "id",
-      label: "label",
-      color: "#8800CC",
+  handleTagAdd(): boolean {
+    const input: string | null = window.prompt("Saisir le nom du tag");
+    if(input === null || input === '' || this.tags.find(t => t.label === input)) {
+      console.log("Saisi de nouveau tag invalide || tag déjà présent.");
+      return false;
     }
 
-    //mettre à jour autres notes si depuis menu notes
+    let newTag: Tag | undefined = StorageService.tags.find(t => t.label === input);
+
+    if(newTag !== undefined) {
+      this.tags.push(newTag);
+    } else {
+      newTag = {
+        id: crypto.randomUUID(),
+        label: input,
+        color: '#BBFFCC',
+      }
+    }
+
+    this.tags.push(newTag);
+    this.saveTags();
+    console.log("new tag added", this.tags);
+    return true;
+  }
+
+  editTag(tag: Tag): void {
+    const editedTagIndex: number = this.tags.findIndex(t => t.id === tag.id);
+    const similarTag: Tag | undefined = StorageService.tags.find(t => t.label === tag.label && t.id !== tag.id);
+
+    if(this.tags.find(t => t.label === this.tags[editedTagIndex].label && t.id !== this.tags[editedTagIndex].id)) {
+      this.loadTags();
+      console.log("tag is already present. canceling");
+      return;
+    }
+
+    console.log("submitted tag", this.editing);
+    console.log("edited tag", this.tags[editedTagIndex]);
+    console.log("similar tag: ", similarTag);
+    console.log("tags before", this.tags);
+
+    if(similarTag !== undefined) {
+      similarTag.color = tag.color;
+      this.tags.splice(editedTagIndex);
+      this.tags.push(similarTag);
+    } else {
+      this.tags[editedTagIndex] = tag;
+    }
+
+    console.log("tags after", this.tags);
+    this.saveTags();
+    StorageService.updateTag(tag);
+    //envoyer signal de rafraichissement à quiconque comporte le tag modifié
+    this.refresh();
   }
 
   handleEditConfirmEvent(): void {
     if(this.editing === undefined) { return; }
-
-    if(this.editing.id !== null) {
-      const existingTagIndex: number = this.tags.findIndex(t => t.id === this.editing!.id);
-
-      if(existingTagIndex !== -1) {
-        this.tags[existingTagIndex].color = this.editing!.color;
-        this.tags[existingTagIndex].label = this.editing!.label;
-      } else {
-        this.tags.push(this.editing);
-      }
-
-      this.editing = undefined;
-    }
+    this.editTag(this.editing);
+    this.editing = undefined;
   }
 
   handleEditCancelEvent(): void {
     this.editing = undefined;
-    this.loadTags(this.id);
+    this.loadTags();
   }
 
   updateEditedTag(tag: Tag): void {
