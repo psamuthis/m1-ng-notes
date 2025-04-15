@@ -3,6 +3,7 @@ import { Note } from '../note';
 import { TagsComponent } from '../tags/tags.component';
 import { NOTES_STORAGE_KEY, StorageService } from '../storage.service';
 import { FormsModule } from '@angular/forms';
+import { Tag } from '../tag';
 
 @Component({
   selector: 'app-note',
@@ -13,6 +14,10 @@ import { FormsModule } from '@angular/forms';
 export class NoteComponent {
   notes: Note[] = [];
   editing?: Note;
+  editedSection?: string = '';
+  search: string | null = null;
+  notesBuffer: Note[] = [];
+
 
   constructor() {}
 
@@ -46,8 +51,12 @@ export class NoteComponent {
     });
   }
 
+  setEditing(note: Note) {
+    this.editing = note;
+  }
+
   handleNewNoteClick() {
-    this.editing = new Note();
+    this.setEditing(new Note());
   }
 
   handleNewNoteEvent() {
@@ -58,24 +67,60 @@ export class NoteComponent {
     this.editing = undefined;
   }
 
-  handleUpButtonClick(note: Note): void {
-    console.log("note up button clicked");
-    //const targetTagIndex: number = this.notes.findIndex((n: Note) => note.id === n.id);
-    //const otherTagIndex: number = ((targetTagIndex-1) % this.notes.length) + this.notes.length;
-
-    //const tmp: Note = this.notes[otherTagIndex];
-    //this.notes[otherTagIndex] = note;
-    //this.notes[targetTagIndex] = tmp;
-    //this.saveNotes();
-    //this.loadNotes();
+  handleNoteUpdate() {
+    this.saveNotes();
+    this.editing = undefined;
+    this.editedSection = '';
   }
 
-  handleDownButtonClick(note: Note): void {
+  handleNoteTitleEvent(note: Note) {
+    this.setEditing(note);
+    this.editedSection = 'title';
+  }
 
+  handleNoteContentEvent(note: Note) {
+    this.setEditing(note);
+    this.editedSection = 'content';
+  }
+
+  handleUpButtonClick(note: Note): void {
+    const targetTagIndex: number = this.notes.findIndex((n: Note) => note.id === n.id);
+    const otherTagIndex: number = ((targetTagIndex + this.notes.length - 1) % this.notes.length);
+
+    const tmp: Note = this.notes[otherTagIndex];
+    this.notes[otherTagIndex] = note;
+    this.notes[targetTagIndex] = tmp;
+    this.saveNotes();
   }
 
   handleDeleteClick(note: Note) {
     this.notes = this.notes.filter((n: Note) => note.id !== n.id);
     this.saveNotes();
+    localStorage.removeItem(note.id);
+  }
+
+  handleDownButtonClick(note: Note): void {
+    const targetTagIndex: number = this.notes.findIndex((n: Note) => note.id === n.id);
+    const otherTagIndex: number = ((targetTagIndex + 1) % this.notes.length);
+
+    const tmp: Note = this.notes[otherTagIndex];
+    this.notes[otherTagIndex] = note;
+    this.notes[targetTagIndex] = tmp;
+    this.saveNotes();
+  }
+
+  handleSearch() {
+    this.notes = [];
+    this.loadNotes();
+
+    if(this.search === null || this.search === '') {
+      return;
+    }
+
+    this.notes = this.notes.filter((note: Note) => {
+      return note.tags.some((tag: Tag) => {
+        return tag.label.startsWith(this.search!);
+      });
+    });
   }
 }

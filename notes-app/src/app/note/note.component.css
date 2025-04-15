@@ -52,6 +52,7 @@
 }
 
 .noteContent {
+    white-space: pre-line;
 }
 
 .notePositionButtons {

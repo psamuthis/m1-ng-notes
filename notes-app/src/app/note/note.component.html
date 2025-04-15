@@ -1,15 +1,24 @@
+<input type="text" (input)="this.handleSearch()" [(ngModel)]="this.search"/>
 <div class="noteList">
-    @for(note of notes; track $index) {
+    @for(note of notes; track note.id) {
         <div class="noteEntry">
-            <div class="noteHeader">
-                <h4 class="noteTitle">{{note.title}}</h4>
+            <div class="noteHeader" (dblclick)="handleNoteTitleEvent(note)">
+                @if(editing && editing === note && this.editedSection === 'title') {
+                    <input type="text" [(ngModel)]="note.title" (keydown.enter)="this.handleNoteUpdate()" />
+                } @else {
+                    <h4 class="noteTitle">{{note.title}}</h4>
+                }
                 <div class="noteManagementButtons">
                     <button class="noteDeleteButton" (click)="handleDeleteClick(note)">x</button>
                 </div>
             </div>
             <app-tags [storageKey]="`${note.id}`" [refresh]="this.loadNotes" class="noteTagList"></app-tags>
-            <div class="noteBody">
-                <div class="noteContent">{{note.content}}</div>
+            <div class="noteBody" (dblclick)="handleNoteContentEvent(note)">
+                @if(editing && editing === note && this.editedSection === 'content') {
+                    <textarea [(ngModel)]="note.content" (keydown.enter)="this.handleNoteUpdate()"></textarea>
+                } @else {
+                    <div class="noteContent">{{note.content}}</div>
+                }
                 <div class="notePositionButtons">
                     <button class="noteUpButton" (click)="handleUpButtonClick(note)">UP</button>
                     <button class="noteDownButton" (click)="handleDownButtonClick(note)">DOWN</button>

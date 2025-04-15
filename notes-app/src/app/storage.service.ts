@@ -61,6 +61,14 @@ export class StorageService implements OnInit {
     const storageNote: string | null = localStorage.getItem(noteTitle);
     if(storageNote !== null) {
       const note: Note = JSON.parse(storageNote);
+      const noteTags: string | null = localStorage.getItem(note.id);
+      if(noteTags) {
+        const tags: Tag[] = JSON.parse(noteTags);
+        tags.forEach((t: Tag) => {
+          const tag: Tag | null = StorageService.loadTag(t.id);
+          tag ? note.tags.push(tag) : null;
+        });
+      }
       console.log("StorageService | Note loaded from storage: ", note);
       return note;
     }
