@@ -1,14 +1,12 @@
 import { Component, Input } from '@angular/core';
-import { RouterOutlet, RouterLink } from '@angular/router';
 import { Tag } from '../tag';
 import { TagComponent } from "../tag/tag.component";
 import { FormsModule } from '@angular/forms';
-import { Note } from '../note';
 import { StorageService, TAGS_STORAGE_KEY } from '../storage.service';
 
 @Component({
   selector: 'app-tags',
-  imports: [RouterOutlet, RouterLink, TagComponent, FormsModule],
+  imports: [TagComponent, FormsModule],
   templateUrl: './tags.component.html',
   styleUrl: './tags.component.css'
 })

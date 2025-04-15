@@ -1,14 +1,12 @@
 import { Component } from '@angular/core';
 import { Note } from '../note';
-import { RouterOutlet } from '@angular/router';
 import { TagsComponent } from '../tags/tags.component';
 import { NOTES_STORAGE_KEY, StorageService } from '../storage.service';
 import { FormsModule } from '@angular/forms';
-import { Tag } from '../tag';
 
 @Component({
   selector: 'app-note',
-  imports: [RouterOutlet, TagsComponent, FormsModule],
+  imports: [TagsComponent, FormsModule],
   templateUrl: './note.component.html',
   styleUrl: './note.component.css'
 })
@@ -48,7 +46,7 @@ export class NoteComponent {
     });
   }
 
-   handleNewNoteClick() {
+  handleNewNoteClick() {
     this.editing = new Note();
   }
 
@@ -60,4 +58,24 @@ export class NoteComponent {
     this.editing = undefined;
   }
 
+  handleUpButtonClick(note: Note): void {
+    console.log("note up button clicked");
+    //const targetTagIndex: number = this.notes.findIndex((n: Note) => note.id === n.id);
+    //const otherTagIndex: number = ((targetTagIndex-1) % this.notes.length) + this.notes.length;
+
+    //const tmp: Note = this.notes[otherTagIndex];
+    //this.notes[otherTagIndex] = note;
+    //this.notes[targetTagIndex] = tmp;
+    //this.saveNotes();
+    //this.loadNotes();
+  }
+
+  handleDownButtonClick(note: Note): void {
+
+  }
+
+  handleDeleteClick(note: Note) {
+    this.notes = this.notes.filter((n: Note) => note.id !== n.id);
+    this.saveNotes();
+  }
 }

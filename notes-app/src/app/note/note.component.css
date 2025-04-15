@@ -27,6 +27,12 @@
     background: rgba(50, 50, 50, 1);
 }
 
+.noteHeader {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
 .noteTitle {
     margin-top: 0;
     margin-bottom: 0;
@@ -34,6 +40,25 @@
     font-weight: bold;
 }
 
-.noteContent {
+.noteManagementButtons {
+    margin-left: auto;
+    align-self: flex-end;
+}
 
+.noteBody {
+    display: flex;
+    flex-direction: row;
+    padding-top: 12px;
+}
+
+.noteContent {
+}
+
+.notePositionButtons {
+    display: flex;
+    margin-right: 8px;
+    margin-left: auto;
+    align-self: flex-end;
+    flex-direction: column;
+    width: fit-content;
 }
